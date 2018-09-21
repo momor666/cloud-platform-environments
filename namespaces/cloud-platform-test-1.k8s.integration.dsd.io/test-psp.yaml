@@ -1,0 +1,51 @@
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: example-psp
+spec:
+  privileged: false  # Don't allow privileged pods!
+  # The rest fills in some required fields.
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  runAsUser:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  volumes:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloud-platform:psp:example
+rules:
+- apiGroups:
+  - policy
+  verbs:
+  - use
+  resources:
+  - podsecuritypolicies
+  resourceNames:
+  - example-psp
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: example-psp
+  namespace: psp-example
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cloud-platform:psp:example
+subjects:
+- kind: ServiceAccount
+  name: example-psp
+  namespace: psp-example
+roleRef:
+  kind: ClusterRole
+  name: cloud-platform:psp:example
+  apiGroup: rbac.authorization.k8s.io
